@@ -3,25 +3,28 @@ import { Card, CardContent, Typography, Button, Stack } from "@mui/material";
 import Swal from "sweetalert2";
 import { deleteBook, purchaseBook, updateBook } from "../services/bookService";
 import { useState, useEffect } from "react";
-import { getrole } from "../services/userService";
+import { getrole, getPurchasedBooks } from "../services/userService"; // ✅ Import function to fetch purchased books
 
 const BookCard = ({ book, refreshBooks }) => {
-    // ✅ Move useState outside of any condition
     const [role, setRole] = useState(null);
+    const [isPurchased, setIsPurchased] = useState(false); // ✅ Track if the book is purchased
 
-    // ✅ useEffect must also be at the top level
     useEffect(() => {
         const userId = localStorage.getItem("userId");
         if (userId) {
             getrole(userId)
                 .then(setRole)
                 .catch(() => setRole(null));
-        } else {
-            setRole(null);
-        }
-    }, []); // Runs only on mount
 
-    // ✅ If book is null, return early (AFTER hooks)
+            // ✅ Check if the user has already purchased this book
+            getPurchasedBooks(userId)
+                .then((purchasedBooks) => {
+                    setIsPurchased(purchasedBooks.some(purchasedBook => purchasedBook.id === book.id));
+                })
+                .catch(() => setIsPurchased(false));
+        }
+    }, [book.id]); // ✅ Dependency added
+
     if (!book) return null;
 
     const handleDelete = () => {
@@ -64,6 +67,7 @@ const BookCard = ({ book, refreshBooks }) => {
                     .then(() => {
                         Swal.fire("Success!", "Book purchased successfully!", "success");
                         refreshBooks();
+                        setIsPurchased(true); // ✅ Update state after successful purchase
                     })
                     .catch((error) => {
                         console.error("Purchase Error:", error);
@@ -102,6 +106,14 @@ const BookCard = ({ book, refreshBooks }) => {
         });
     };
 
+    const handleView = () => {
+        Swal.fire({
+            title: `Book: ${book.title}`,
+            text: `You have already purchased this book.`,
+            icon: "info",
+        });
+    };
+
     return (
         <Card sx={{ maxWidth: 345, boxShadow: 3, p: 2 }}>
             <CardContent>
@@ -109,9 +121,16 @@ const BookCard = ({ book, refreshBooks }) => {
                 <Typography color="textSecondary">Author: {book.author || "Unknown"}</Typography>
                 <Typography color="textSecondary">Copies Available: {book.copiesAvailable ?? "N/A"}</Typography>
                 <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-                    <Button variant="contained" color="primary" onClick={handlePurchase} disabled={book.copiesAvailable === 0}>
-                        Purchase
-                    </Button>
+                    {/* ✅ Show "View" button if purchased, else show "Purchase" button */}
+                    {isPurchased ? (
+                        <Button variant="contained" color="success" onClick={handleView}>
+                            View
+                        </Button>
+                    ) : (
+                        <Button variant="contained" color="primary" onClick={handlePurchase} disabled={book.copiesAvailable === 0}>
+                            Purchase
+                        </Button>
+                    )}
 
                     {/* Show Edit/Delete buttons only if role is ADMIN */}
                     {role === "ADMIN" && (
@@ -136,12 +155,6 @@ BookCard.propTypes = {
         title: PropTypes.string.isRequired,
         author: PropTypes.string.isRequired,
         copiesAvailable: PropTypes.number,
-        users: PropTypes.shape({
-            id: PropTypes.number,
-            name: PropTypes.string,
-            email: PropTypes.string,
-            role: PropTypes.string,
-        }),
     }).isRequired,
     refreshBooks: PropTypes.func.isRequired,
 };

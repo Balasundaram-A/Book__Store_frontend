@@ -41,12 +41,14 @@ export const getPurchaseHistory = async (userId) => {
   }
 };
 
-export const getAllPurchaseHistory = async () => {
+export const getAllPurchaseHistory = async (page = 0, size = 10) => {
   try {
-      const response = await axios.get(`${PURCHASES_API_BASE_URL}/history/all`);
-      return response.data;
+      const response = await fetch(`${PURCHASES_API_BASE_URL}/purchase-history?page=${page}&size=${size}`);
+      if (!response.ok) throw new Error("Failed to fetch history");
+      return response.json(); 
   } catch (error) {
-      console.error("Error fetching purchase history", error);
-      return [];
+      console.error(error);
+      return { content: [], totalPages: 0 };
   }
 };
+
