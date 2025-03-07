@@ -4,8 +4,13 @@ const BOOKS_API_BASE_URL = "http://localhost:8080/books";
 const PURCHASES_API_BASE_URL = "http://localhost:8080/purchases";
 
 export const getBooks = () => axios.get(`${BOOKS_API_BASE_URL}/all`);
-export const addBook = (bookData) => axios.post(`${BOOKS_API_BASE_URL}/add`, bookData);
-export const deleteBook = (bookId) => axios.delete(`${BOOKS_API_BASE_URL}/delete/${bookId}`);
+export const addBook = (formData) => {
+  return axios.post(`${BOOKS_API_BASE_URL}/add`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};export const deleteBook = (bookId) => axios.delete(`${BOOKS_API_BASE_URL}/delete/${bookId}`);
 export const searchBooks = (title) => {
   return axios.get(`${BOOKS_API_BASE_URL}/search/${title}`).then(response => response.data);
 };
@@ -52,3 +57,9 @@ export const getAllPurchaseHistory = async (page = 0, size = 10) => {
   }
 };
 
+
+export const getBookDocument = (bookId) => {
+  return axios.get(`${BOOKS_API_BASE_URL}/doc/${bookId}`, {
+    responseType: "blob", // Binary response for documents
+  });
+};

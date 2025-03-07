@@ -1,13 +1,13 @@
 import PropTypes from "prop-types";
 import { Card, CardContent, Typography, Button, Stack } from "@mui/material";
 import Swal from "sweetalert2";
-import { deleteBook, purchaseBook, updateBook } from "../services/bookService";
+import { deleteBook, purchaseBook, updateBook, getBookDocument } from "../services/bookService";
 import { useState, useEffect } from "react";
-import { getrole, getPurchasedBooks } from "../services/userService"; // ✅ Import function to fetch purchased books
+import { getrole, hasUserPurchasedBook } from "../services/userService";
 
 const BookCard = ({ book, refreshBooks }) => {
     const [role, setRole] = useState(null);
-    const [isPurchased, setIsPurchased] = useState(false); // ✅ Track if the book is purchased
+    const [isPurchased, setIsPurchased] = useState(false);
 
     useEffect(() => {
         const userId = localStorage.getItem("userId");
@@ -15,15 +15,12 @@ const BookCard = ({ book, refreshBooks }) => {
             getrole(userId)
                 .then(setRole)
                 .catch(() => setRole(null));
-
-            // ✅ Check if the user has already purchased this book
-            getPurchasedBooks(userId)
-                .then((purchasedBooks) => {
-                    setIsPurchased(purchasedBooks.some(purchasedBook => purchasedBook.id === book.id));
-                })
-                .catch(() => setIsPurchased(false));
+    
+            hasUserPurchasedBook(userId, book.id)
+                .then(setIsPurchased) // ✅ Directly sets the boolean value
+                .catch(() => setIsPurchased(false)); // ✅ Default to false in case of errors
         }
-    }, [book.id]); // ✅ Dependency added
+    }, [book.id]); // ✅ Removed isPurchased to avoid infinite loops
 
     if (!book) return null;
 
@@ -67,7 +64,7 @@ const BookCard = ({ book, refreshBooks }) => {
                     .then(() => {
                         Swal.fire("Success!", "Book purchased successfully!", "success");
                         refreshBooks();
-                        setIsPurchased(true); // ✅ Update state after successful purchase
+                        setIsPurchased(true); // ✅ Update state after purchase
                     })
                     .catch((error) => {
                         console.error("Purchase Error:", error);
@@ -82,16 +79,13 @@ const BookCard = ({ book, refreshBooks }) => {
             title: "Edit Book",
             html: `
                 <input id="swal-title" class="swal2-input" value="${book.title}" placeholder="Title">
-                <input id="swal-author" class="swal2-input" value="${book.author}" placeholder="Author">
-                <input id="swal-copies" class="swal2-input" type="number" value="${book.copiesAvailable}" placeholder="Copies Available">
-            `,
+                <input id="swal-author" class="swal2-input" value="${book.author}" placeholder="Author">`,
             showCancelButton: true,
             confirmButtonText: "Save",
             preConfirm: () => {
                 return {
                     title: document.getElementById("swal-title").value.trim(),
                     author: document.getElementById("swal-author").value.trim(),
-                    copiesAvailable: parseInt(document.getElementById("swal-copies").value, 10) || 0,
                 };
             },
         }).then((result) => {
@@ -106,33 +100,38 @@ const BookCard = ({ book, refreshBooks }) => {
         });
     };
 
-    const handleView = () => {
-        Swal.fire({
-            title: `Book: ${book.title}`,
-            text: `Still in Development .`,
-            icon: "info",
-        });
+    const handleView = async () => {
+        try {
+            const response = await getBookDocument(book.id);
+            const blob = new Blob([response.data], { type: response.headers["content-type"] });
+            const url = URL.createObjectURL(blob);
+            
+            // ✅ Open in a new tab
+            window.open(url, "_blank");
+        } catch (error) {
+            console.error("Error fetching document:", error);
+            Swal.fire("Error", "Failed to load document!", "error");
+        }
     };
+    
 
     return (
         <Card sx={{ maxWidth: 345, boxShadow: 3, p: 2 }}>
             <CardContent>
                 <Typography variant="h6">{book.title || "Untitled"}</Typography>
                 <Typography color="textSecondary">Author: {book.author || "Unknown"}</Typography>
-                <Typography color="textSecondary">Copies Available: {book.copiesAvailable ?? "N/A"}</Typography>
+                
                 <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-                    {/* ✅ Show "View" button if purchased, else show "Purchase" button */}
                     {isPurchased ? (
                         <Button variant="contained" color="success" onClick={handleView}>
-                            View
+                            view
                         </Button>
                     ) : (
-                        <Button variant="contained" color="primary" onClick={handlePurchase} disabled={book.copiesAvailable === 0}>
+                        <Button variant="contained" color="primary" onClick={handlePurchase}>
                             Purchase
                         </Button>
                     )}
 
-                    {/* Show Edit/Delete buttons only if role is ADMIN */}
                     {role === "ADMIN" && (
                         <>
                             <Button variant="contained" color="warning" onClick={handleEdit}>
@@ -144,6 +143,7 @@ const BookCard = ({ book, refreshBooks }) => {
                         </>
                     )}
                 </Stack>
+
             </CardContent>
         </Card>
     );
@@ -154,7 +154,6 @@ BookCard.propTypes = {
         id: PropTypes.number.isRequired,
         title: PropTypes.string.isRequired,
         author: PropTypes.string.isRequired,
-        copiesAvailable: PropTypes.number,
     }).isRequired,
     refreshBooks: PropTypes.func.isRequired,
 };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { CircularProgress, Typography, TextField, Container ,Box} from "@mui/material";
 import { getBooks, searchBooks } from "../services/bookService";
-import Grid2 from "@mui/material/Grid"; // Import Grid from MUI correctly
+import Grid2 from "@mui/material/Grid";
 import BookCard from "./BookCard";
 
 const BookList = () => {

@@ -18,8 +18,11 @@ export const getrole = async (id) => {
     return null;
   }
 };
-export const getPurchasedBooks = async (userId) => {
-  const response = await axios.get(`${API_BASE_URL}/${userId}/purchased-books`);
-  return response.data; // ✅ Returns the list of purchased books
+
+export const hasUserPurchasedBook = async (userId, bookId) => {
+  const response = await axios.get(`${API_BASE_URL}/users/${userId}/books/${bookId}/purchased`);
+  return response.data; // ✅ Returns true or false
 };
+
+
 

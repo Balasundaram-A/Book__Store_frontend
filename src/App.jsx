@@ -21,7 +21,8 @@ function App() {
     borderRadius: "5px",
     display: "inline-block",
     width: "100%", // Full width
-    marginBottom:"10px"
+    marginBottom:"10px",
+  
   }}
 >
   📚 Book Store

@@ -1,46 +1,50 @@
 import { useState, useEffect } from "react";
 import { Button, Stack, Container } from "@mui/material";
-import { useNavigate } from "react-router-dom";  // ✅ Import useNavigate
+import { useNavigate } from "react-router-dom";
 import BooksPage from "../pages/BooksPage";
 import PurchaseHistory from "../pages/PurchaseHistory";
 import UsersPage from "../pages/UsersPage";
 import AdminPurchaseHistory from "../pages/AdminPurchaseHistory";
 import { getrole } from "../services/userService";
+import Swal from "sweetalert2";
 
 const Home = () => {
   const [currentPage, setCurrentPage] = useState("books");
   const [role, setRole] = useState(null);
   const userId = localStorage.getItem("userId");
-  const navigate = useNavigate();  // ✅ Initialize useNavigate()
+  const navigate = useNavigate(); 
 
   useEffect(() => {
     if (!userId) {
-      navigate("/", { replace: true }); // ✅ Redirect to login if not authenticated
+      navigate("/", { replace: true }); 
   }
-
-if (!userId) {
-  return null; // Prevents rendering before redirection
-}
 
     if (userId) {
       getrole(userId)
         .then((userRole) => {
-          setRole(userRole); // ✅ Ensure role is stored correctly
+          setRole(userRole); 
         })
         .catch((error) => console.error("Error fetching role:", error));
     }
-  }, [userId,navigate]); // ✅ Add userId as dependency
+  }, [userId,navigate]);
 
-  // ✅ Logout Function
   const handleLogout = () => {
-    localStorage.clear(); // ✅ Clears all stored data
-
-    navigate("/", { replace: true }); // ✅ Redirect to login and remove from history
-
-    setTimeout(() => {
-        window.location.reload(); // ✅ Ensures state reset after navigation
-    }, 100);
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You will be logged out!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, logout!"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localStorage.clear(); // ✅ Clears all stored data
+            navigate("/", { replace: true }); // ✅ Redirect to login
+        }
+    });
 };
+
 
 
   return (
