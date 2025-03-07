@@ -10,9 +10,9 @@ const AdminPurchaseHistory = () => {
     const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
-        getAllPurchaseHistory(page, 10).then((data) => {
+        getAllPurchaseHistory(page, 5).then((data) => {
             setHistory(data.content);
-            setFilteredHistory(data.content); // ✅ Default to full list
+            setFilteredHistory(data.content); // Default to full list
             setTotalPages(data.totalPages);
         }).catch(() => console.error("Failed to fetch history"));
     }, [page]);
@@ -35,7 +35,7 @@ const AdminPurchaseHistory = () => {
                 All Users Purchase History
             </Typography>
 
-            {/* 🔍 Search Bar */}
+            {/* Search Bar */}
             <Box sx={{ display: "flex", justifyContent: "flex-start", mb: 2, px: 2 }}>
     <TextField
         label="🔍 Search"
@@ -59,19 +59,19 @@ const AdminPurchaseHistory = () => {
             <Table>
                 <TableHead>
                     <TableRow>
-                        <TableCell>User ID</TableCell>
+                        <TableCell> </TableCell>
                         <TableCell>User Name</TableCell>
                         <TableCell>Email</TableCell>
-                        <TableCell>Book Title</TableCell>
+                        <TableCell>Book</TableCell>
                         <TableCell>Author</TableCell>
-                        <TableCell>Purchase Date</TableCell>
+                        <TableCell>Purchased Date</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {filteredHistory.length > 0 ? (
                         filteredHistory.map((entry, index) => (
                             <TableRow key={index}>
-                                <TableCell>{entry.userId}</TableCell>
+                                <TableCell>{page * 5 + index + 1}</TableCell>
                                 <TableCell>{entry.userName}</TableCell>
                                 <TableCell>{entry.userEmail}</TableCell>
                                 <TableCell>{entry.bookTitle}</TableCell>

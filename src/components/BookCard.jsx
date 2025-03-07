@@ -109,7 +109,7 @@ const BookCard = ({ book, refreshBooks }) => {
     const handleView = () => {
         Swal.fire({
             title: `Book: ${book.title}`,
-            text: `You have already purchased this book.`,
+            text: `Still in Development .`,
             icon: "info",
         });
     };
