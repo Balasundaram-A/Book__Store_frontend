@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button, Stack, Container } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import BooksPage from "../pages/BooksPage";
-import PurchaseHistory from "../pages/PurchaseHistory";
 import UsersPage from "../pages/UsersPage";
 import AdminPurchaseHistory from "../pages/AdminPurchaseHistory";
 import { getrole } from "../services/userService";
@@ -60,10 +59,6 @@ const Home = () => {
           </Button>
         )}
 
-        <Button variant="contained" onClick={() => setCurrentPage("purchases")}>
-          My History
-        </Button>
-
         {role === "ADMIN" && (
           <Button variant="contained" onClick={() => setCurrentPage("allpurchases")}>
             History
@@ -79,7 +74,6 @@ const Home = () => {
       <div style={{ marginTop: "20px" }}>
         {currentPage === "books" && <BooksPage />}
         {currentPage === "users" && role === "ADMIN" && <UsersPage />}
-        {currentPage === "purchases" && <PurchaseHistory />}
         {currentPage === "allpurchases" && role === "ADMIN" && <AdminPurchaseHistory />}
       </div>
     </Container>

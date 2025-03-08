@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getAllPurchaseHistory } from "../services/bookService";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, Pagination, TextField, Box } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, Pagination, TextField, Box, Button } from "@mui/material";
 
 const AdminPurchaseHistory = () => {
     const [history, setHistory] = useState([]);
@@ -8,26 +8,46 @@ const AdminPurchaseHistory = () => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
 
-    useEffect(() => {
-        getAllPurchaseHistory(page, 5).then((data) => {
-            setHistory(data.content);
-            setFilteredHistory(data.content); // Default to full list
-            setTotalPages(data.totalPages);
-        }).catch(() => console.error("Failed to fetch history"));
+    // ✅ Wrap fetchHistory in useCallback to prevent infinite loops
+    const fetchHistory = useCallback(() => {
+        getAllPurchaseHistory(page, 5)
+            .then((data) => {
+                setHistory(data.content);
+                setTotalPages(data.totalPages);
+            })
+            .catch(() => console.error("Failed to fetch history"));
     }, [page]);
 
-    // 🔍 Handle search filtering
+    // ✅ Fetch data when page changes
+    useEffect(() => {
+        fetchHistory();
+    }, [fetchHistory]);
+
+    // ✅ Filter search results & date range
     useEffect(() => {
         const lowercasedQuery = searchQuery.toLowerCase();
-        const filtered = history.filter(
-            (entry) =>
-                entry.bookTitle.toLowerCase().includes(lowercasedQuery) ||
-                entry.bookAuthor.toLowerCase().includes(lowercasedQuery) ||
-                entry.userName.toLowerCase().includes(lowercasedQuery)
-        );
+        const filtered = history.filter((entry) => {
+            const matchesSearch =
+                (entry?.bookTitle?.toLowerCase() || "").includes(lowercasedQuery) ||
+                (entry?.bookAuthor?.toLowerCase() || "").includes(lowercasedQuery) ||
+                (entry?.userName?.toLowerCase() || "").includes(lowercasedQuery);
+
+            const purchaseDate = new Date(entry.purchaseDate);
+            const from = fromDate ? new Date(fromDate) : null;
+            const to = toDate ? new Date(toDate) : null;
+
+            const matchesDate =
+                (!from || purchaseDate >= from) &&
+                (!to || purchaseDate <= to);
+
+            return matchesSearch && matchesDate;
+        });
+
         setFilteredHistory(filtered);
-    }, [searchQuery, history]);
+    }, [searchQuery, history, fromDate, toDate]);
 
     return (
         <TableContainer component={Paper} sx={{ p: 2 }}>
@@ -35,31 +55,43 @@ const AdminPurchaseHistory = () => {
                 All Users Purchase History
             </Typography>
 
-            {/* Search Bar */}
-            <Box sx={{ display: "flex", justifyContent: "flex-start", mb: 2, px: 2 }}>
-    <TextField
-        label="🔍 Search"
-        variant="outlined"
-        sx={{ 
-            width: 300, 
-            backgroundColor: "#f9f9f9", 
-            borderRadius: "8px", 
-            "& .MuiOutlinedInput-root": {
-                "& fieldset": { borderColor: "#b0bec5" },
-                "&:hover fieldset": { borderColor: "#1976d2" },
-                "&.Mui-focused fieldset": { borderColor: "#1565c0" }
-            }
-        }}
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-    />
-</Box>
+            {/* 🔍 Search & Date Filters in One Row */}
+            <Box sx={{ display: "flex", gap: 2, mb: 2, px: 2, alignItems: "center" }}>
+                <TextField
+                    label="🔍 Search"
+                    variant="outlined"
+                    sx={{ width: 250, backgroundColor: "#f9f9f9", borderRadius: "8px" }}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <TextField
+                    label="From Date"
+                    type="datetime-local"
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ flex: 1 }}
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                />
+                <TextField
+                    label="To Date"
+                    type="datetime-local"
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ flex: 1 }}
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                />
+                <Button variant="contained" color="primary" onClick={() => setPage(0)}>
+                    Apply Filter
+                </Button>
+            </Box>
 
-
+            {/* Purchase Table */}
             <Table>
                 <TableHead>
                     <TableRow>
-                        <TableCell> </TableCell>
+                        <TableCell>#</TableCell>
                         <TableCell>User Name</TableCell>
                         <TableCell>Email</TableCell>
                         <TableCell>Book</TableCell>
@@ -90,41 +122,41 @@ const AdminPurchaseHistory = () => {
             </Table>
 
             {/* Pagination Component */}
-            <Pagination 
-                count={totalPages} 
-                page={page + 1} 
+            <Pagination
+                count={totalPages}
+                page={page + 1}
                 onChange={(event, value) => setPage(value - 1)}
-                variant="outlined" 
+                variant="outlined"
                 shape="rounded"
                 size="large"
                 color="primary"
                 showFirstButton
                 showLastButton
-                sx={{ 
-                    mt: 2, 
-                    display: "flex", 
+                sx={{
+                    mt: 2,
+                    display: "flex",
                     justifyContent: "center",
-                    "& .MuiPaginationItem-root": { 
-                        fontSize: "1.1rem", 
+                    "& .MuiPaginationItem-root": {
+                        fontSize: "1.1rem",
                         fontWeight: "bold",
                         color: "black",
                         borderRadius: "10px",
                         transition: "all 0.3s ease-in-out",
-                        "&:hover": { 
+                        "&:hover": {
                             backgroundColor: "#f5f5f5",
                             transform: "scale(1.1)"
                         }
                     },
                     "& .Mui-selected": {
-                        backgroundColor: "#1976d2", 
+                        backgroundColor: "#1976d2",
                         color: "white",
                         fontWeight: "bold",
-                        "&:hover": { 
+                        "&:hover": {
                             backgroundColor: "#1565c0",
                             transform: "scale(1.1)"
                         }
                     }
-                }} 
+                }}
             />
         </TableContainer>
     );

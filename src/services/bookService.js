@@ -36,15 +36,6 @@ export const purchaseBook = async (userId, bookId) => {
   }
 };
 
-export const getPurchaseHistory = async (userId) => {
-  try {
-      const response = await axios.get(`${PURCHASES_API_BASE_URL}/history/${userId}`);
-      return response.data;
-  } catch (error) {
-      console.error("Error fetching purchase history:", error);
-      return [];
-  }
-};
 
 export const getAllPurchaseHistory = async (page = 0, size = 10) => {
   try {
@@ -62,4 +53,16 @@ export const getBookDocument = (bookId) => {
   return axios.get(`${BOOKS_API_BASE_URL}/doc/${bookId}`, {
     responseType: "blob", // Binary response for documents
   });
+};
+
+export const getPurchasesByDateRange = async (from, to) => {
+  try {
+      const response = await axios.get(`${PURCHASES_API_BASE_URL}/search`, {
+          params: { from, to }
+      });
+      return response.data;
+  } catch (error) {
+      console.error("Error fetching purchases by date:", error);
+      return [];
+  }
 };
