@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { getAllPurchaseHistory } from "../services/bookService";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, Pagination, TextField, Box, Button } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Pagination, TextField, Box, Button } from "@mui/material";
 
 const AdminPurchaseHistory = () => {
     const [history, setHistory] = useState([]);
@@ -51,16 +51,33 @@ const AdminPurchaseHistory = () => {
 
     return (
         <TableContainer component={Paper} sx={{ p: 2 }}>
-            <Typography variant="h5" sx={{ mb: 2, textAlign: "center" }}>
-                All Users Purchase History
-            </Typography>
 
             {/* 🔍 Search & Date Filters in One Row */}
             <Box sx={{ display: "flex", gap: 2, mb: 2, px: 2, alignItems: "center" }}>
                 <TextField
                     label="🔍 Search"
                     variant="outlined"
-                    sx={{ width: 250, backgroundColor: "#f9f9f9", borderRadius: "8px" }}
+                    sx={{  width: 250,
+                        backgroundColor: "#f9f9f9",
+                        borderRadius: "12px",
+                        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+                        transition: "all 0.3s ease-in-out",
+                        "&:hover": {
+                            backgroundColor: "#f0f0f0",
+                            transform: "scale(1.02)"
+                        },
+                        "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                                borderRadius: "12px",
+                            },
+                            "&:hover fieldset": {
+                                borderColor: "#1976d2",
+                            },
+                            "&.Mui-focused fieldset": {
+                                borderColor: "#1565c0",
+                                borderWidth: "2px"
+                            }
+                        } }}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -69,25 +86,80 @@ const AdminPurchaseHistory = () => {
                     type="datetime-local"
                     variant="outlined"
                     InputLabelProps={{ shrink: true }}
-                    sx={{ flex: 1 }}
+                    sx={{
+                        width: 250,
+                        backgroundColor: "#f9f9f9",
+                        borderRadius: "12px",
+                        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+                        transition: "all 0.3s ease-in-out",
+                        "&:hover": {
+                            backgroundColor: "#f0f0f0",
+                            transform: "scale(1.02)"
+                        },
+                        "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                                borderRadius: "12px",
+                            },
+                            "&:hover fieldset": {
+                                borderColor: "#1976d2",
+                            },
+                            "&.Mui-focused fieldset": {
+                                borderColor: "#1565c0",
+                                borderWidth: "2px"
+                            }
+                        }
+                    }}
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
                 />
+
                 <TextField
                     label="To Date"
                     type="datetime-local"
                     variant="outlined"
                     InputLabelProps={{ shrink: true }}
-                    sx={{ flex: 1 }}
+                    sx={{
+                        width: 250,
+                        backgroundColor: "#f9f9f9",
+                        borderRadius: "12px",
+                        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+                        transition: "all 0.3s ease-in-out",
+                        "&:hover": {
+                            backgroundColor: "#f0f0f0",
+                            transform: "scale(1.02)"
+                        },
+                        "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                                borderRadius: "12px",
+                            },
+                            "&:hover fieldset": {
+                                borderColor: "#1976d2",
+                            },
+                            "&.Mui-focused fieldset": {
+                                borderColor: "#1565c0",
+                                borderWidth: "2px"
+                            }
+                        }
+                    }}
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
                 />
+
                 <Button variant="contained" color="primary" onClick={() => setPage(0)}>
                     Apply Filter
                 </Button>
+                <Button
+                    variant="outlined"
+                    color="secondary"
+                    onClick={() => {
+                        setFromDate("");
+                        setToDate("");
+                    }}
+                >
+                    Reset
+                </Button>
             </Box>
 
-            {/* Purchase Table */}
             <Table>
                 <TableHead>
                     <TableRow>
